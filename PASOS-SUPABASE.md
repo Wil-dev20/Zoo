@@ -10,15 +10,15 @@
 El registro envía la procedencia declarada y el progreso; opiniones y reportes también se guardan al usar una sesión Supabase. Sin URL/clave configuradas, el juego se mantiene en modo local y los datos no llegan al panel. Supabase Auth gestiona las contraseñas. player_profiles tiene acceso protegido por RLS; el panel no muestra correos ni celulares.
 
 
-## Activar registro e inicio de sesión con Google
 
-La app ya muestra el botón **Continuar con Google**. Para habilitar el proveedor en la nube:
+## Acceso rápido sin Google Cloud Console
 
-1. En Google Cloud Console, crea un cliente OAuth de tipo **Aplicación web** y configura la pantalla de consentimiento. Si la app está en pruebas, añade las cuentas Google autorizadas como usuarios de prueba.
-2. En los orígenes autorizados de JavaScript agrega `https://zooconti.vercel.app`.
-3. En los URI de redireccionamiento autorizados agrega `https://igtutwenpfcqgtnargfk.supabase.co/auth/v1/callback`.
-4. En Supabase, abre **Authentication → Sign In / Providers → Google**, habilita Google y pega el **Client ID** y el **Client Secret** de Google Cloud. Guarda los cambios.
-5. En **Authentication → URL Configuration**, fija `https://zooconti.vercel.app` como Site URL y agrega `https://zooconti.vercel.app/**` a Redirect URLs.
-6. Publica desde GitHub los cambios de `index.html` y `zv-cloud-config.js`. Después abre la app con `https://zooconti.vercel.app`; no uses el archivo local `.html` para iniciar sesión.
+La app permite crear una cuenta o iniciar sesión con un enlace enviado al correo. No requiere configurar Google Cloud ni guardar secretos de Google. La cuenta y los puntajes se siguen guardando en Supabase.
 
-Google todavía figura deshabilitado en el proyecto Supabase. El botón mostrará un aviso hasta completar los pasos 1–5. No compartas el Client Secret ni lo guardes en archivos del sitio.
+1. Publica la versión actualizada de `index.html` y `zv-cloud-config.js`.
+2. En Supabase, abre **Authentication → URL Configuration**. Usa `https://zooconti.vercel.app` como Site URL y agrega esa URL a Redirect URLs.
+3. Abre la app desde `https://zooconti.vercel.app` (no desde el archivo `.html`).
+4. En registro, completa los datos, escribe tu correo y pulsa **Crear cuenta con enlace por correo**. Para iniciar sesión, escribe tu correo y pulsa **Recibir enlace de acceso por correo**.
+5. Abre el enlace recibido en el mismo navegador donde tienes la app. Si no llega, revisa spam y el límite de envío de correo de Supabase.
+
+El acceso con Google necesita credenciales de proveedor OAuth; por eso se reemplazó el botón que mostraba `Unsupported provider` por el acceso por correo, que no usa Google Cloud Console.
