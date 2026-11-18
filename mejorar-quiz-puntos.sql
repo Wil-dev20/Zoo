@@ -68,7 +68,7 @@ begin
         updated_at=now()
     where user_id=uid;
   end if;
-  return jsonb_build_object('is_correct',is_right,'already_answered',n=0);
+  return jsonb_build_object('is_correct',is_right,'already_answered',n=0,'correct_option',correct);
 end;
 $$;
 
