@@ -18,3 +18,7 @@ Aplicación web adaptable a celular y computadora.
 - PASOS-SUPABASE.md: conexión y alta de las cuatro administradoras.
 
 El modo local conserva el progreso solo en el navegador. La sincronización entre dispositivos y el panel requieren configurar Supabase y publicar por HTTPS. Valida las fichas de especies con fuentes oficiales antes del uso público.
+
+
+Mapa actualizado: la app usa `mapa-aereo-zoologico.png` y muestra marcadores interactivos para 18 animales. Para que trivias y puntajes de los 11 animales añadidos funcionen con Supabase, ejecuta `actualizar-animales-mapa.sql` después del esquema inicial. La ubicación y las fichas añadidas son aproximadas/educativas y deben validarse con el zoológico.
+
