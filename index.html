@@ -19,7 +19,7 @@ async function loadAnimalPhoto(a){
    let title=animalPhotoPages[a.id];if(!title)throw new Error("No hay fuente de imagen");
    let response=await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title));
    if(!response.ok)throw new Error("No se obtuvo la fotografía");
-   let summary=await response.json(),photo=summary.thumbnail&&summary.thumbnail.source;
+   let summary=await response.json(),photo=summary.thumbnail&&summary.thumbnail.source;if(photo)photo=photo.replace(/^https:\/\/thumb\.wikimedia\.org\//,"https://upload.wikimedia.org/").split("?")[0];
    if(!photo||!/^https:\/\/(thumb\.wikimedia\.org|upload\.wikimedia\.org)\//.test(photo))throw new Error("No hay foto disponible");
    data={photo:photo,page:summary.content_urls?.desktop?.page||"https://en.wikipedia.org/wiki/"+encodeURIComponent(title),artist:"",license:"",licenseUrl:""};
    let imagePath=new URL(summary.originalimage?.source||photo).pathname,filename=decodeURIComponent(imagePath.split("/").pop()).replace(/^\d+px-/i,"");
@@ -38,9 +38,9 @@ async function loadAnimalPhoto(a){
    animalPhotoCache[a.id]=data
   }
   if(request!==animalPhotoRequest||!document.getElementById("animalPhoto"))return;
-  image.onload=function(){if(request===animalPhotoRequest){image.style.display="block";fallback.style.display="none"}};
-  image.onerror=function(){if(request===animalPhotoRequest){image.style.display="none";fallback.style.display="grid";credit.textContent="No se pudo cargar la foto. Revisa tu conexión a internet."}};
-  image.src=data.photo;
+  image.onload=function(){if(image.isConnected){image.style.display="block";fallback.style.display="none"}};
+  image.onerror=function(){if(image.isConnected){image.style.display="none";fallback.style.display="grid";credit.textContent="No se pudo cargar la foto. Revisa tu conexión a internet."}};
+  image.style.display="block";fallback.style.display="none";image.src=data.photo;
   credit.textContent=(data.artist?"Foto: "+data.artist:"Fotografía referencial de la especie")+(data.license?" · Licencia: "+data.license:"")+" · ";
   let source=document.createElement("a");source.href=data.page;source.target="_blank";source.rel="noopener noreferrer";source.textContent="Fuente Wikimedia";credit.appendChild(source);
   if(data.licenseUrl&&/^https:\/\//.test(data.licenseUrl)){credit.appendChild(document.createTextNode(" · "));let license=document.createElement("a");license.href=data.licenseUrl;license.target="_blank";license.rel="noopener noreferrer";license.textContent="Ver licencia";credit.appendChild(license)}
