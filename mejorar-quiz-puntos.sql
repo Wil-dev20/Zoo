@@ -8,7 +8,7 @@ update public.progreso_visitantes
 set tour_reward_claimed = true
 where completed_tours > 0 and tour_reward_claimed = false;
 
--- Agrega las preguntas 4 y 5 a cada animal activo, sin duplicar respuestas previas.
+-- Asegura que existan preguntas 4 y 5 antes de normalizar el banco completo.
 insert into public.preguntas(animal_id,pregunta,opcion_a,opcion_b,opcion_c,respuesta_correcta,retroalimentacion,question_order)
 select a.id,'¿Qué dato curioso se aplica al '||a.name||'?',coalesce(nullif(a.fact,''),'Cada especie tiene adaptaciones propias.'),'No necesita cuidados','Vive en el espacio','A','Dato curioso: '||coalesce(nullif(a.fact,''),'Cada especie tiene adaptaciones propias.'),4
 from public.animales a
@@ -20,6 +20,45 @@ select a.id,'¿Cómo debemos comportarnos cerca del recinto de '||a.name||'?','O
 from public.animales a
 where a.is_active
   and not exists (select 1 from public.preguntas q where q.animal_id=a.id and q.question_order=5);
+
+-- Reemplaza la plantilla repetitiva por cinco preguntas distintas por animal.
+-- Conserva los IDs de las preguntas para no borrar el historial de respuestas.
+with bank as (
+  select a.id animal_id, v.question_order, v.pregunta, v.opcion_a, v.opcion_b,
+         v.opcion_c, v.feedback
+  from public.animales a
+  cross join lateral (values
+    (1, '¿Qué dato describe a '||a.name||'?', coalesce(nullif(a.fact,''),'Cada especie tiene características propias.'), 'Tiene hojas en vez de órganos.', 'Es una especie que vive fuera del planeta.', coalesce(nullif(a.fact,''),'Cada especie tiene características propias.')),
+    (2, '¿Cuál es la alimentación general de '||a.name||'?', coalesce(nullif(a.food,''),'Su dieta depende de la especie.'), 'Se alimenta de rocas.', 'No necesita comer ni beber.', 'La dieta puede variar según la especie y el ejemplar.'),
+    (3, '¿Qué ambiente se asocia con '||a.name||'?', coalesce(nullif(a.habitat,''),'Su hábitat depende de la especie.'), 'Un arrecife coralino.', 'La superficie lunar.', 'El hábitat puede variar según la especie y el ejemplar.'),
+    (4, '¿Cómo debemos observar a '||a.name||' de manera segura?', 'Mirar a distancia y seguir las indicaciones.', 'Darle comida sin autorización.', 'Tocar o molestar al animal.', 'Mantener distancia y seguir las indicaciones protege a los animales y visitantes.'),
+    (5, '¿A qué grupo zoológico pertenece '||a.name||'?',
+      case when a.slug in ('condor','buho','halcon','loro','perdiz') then 'Ave'
+           when a.slug in ('serpiente','tortuga') then 'Reptil' else 'Mamífero' end,
+      case when a.slug in ('condor','buho','halcon','loro','perdiz') then 'Mamífero'
+           when a.slug in ('serpiente','tortuga') then 'Ave' else 'Ave' end,
+      case when a.slug in ('condor','buho','halcon','loro','perdiz') then 'Reptil'
+           when a.slug in ('serpiente','tortuga') then 'Mamífero' else 'Reptil' end,
+      'Este animal pertenece al grupo '||case when a.slug in ('condor','buho','halcon','loro','perdiz') then 'Ave'
+           when a.slug in ('serpiente','tortuga') then 'Reptil' else 'Mamífero' end||'.')
+  ) as v(question_order,pregunta,opcion_a,opcion_b,opcion_c,feedback)
+  where a.is_active
+), updated as (
+  update public.preguntas q
+  set pregunta=b.pregunta, opcion_a=b.opcion_a, opcion_b=b.opcion_b,
+      opcion_c=b.opcion_c, respuesta_correcta='A', retroalimentacion=b.feedback,
+      active=true
+  from bank b
+  where q.animal_id=b.animal_id and q.question_order=b.question_order
+  returning q.id
+)
+insert into public.preguntas(animal_id,pregunta,opcion_a,opcion_b,opcion_c,respuesta_correcta,retroalimentacion,question_order)
+select b.animal_id,b.pregunta,b.opcion_a,b.opcion_b,b.opcion_c,'A',b.feedback,b.question_order
+from bank b
+where not exists (
+  select 1 from public.preguntas q
+  where q.animal_id=b.animal_id and q.question_order=b.question_order
+);
 
 create or replace function public.zv_record_visit(p_animal_id uuid)
 returns boolean language plpgsql security definer set search_path=''
