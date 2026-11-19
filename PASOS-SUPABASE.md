@@ -2,7 +2,7 @@
 
 1. Crea un proyecto Supabase a nombre de la entidad responsable.
 2. Ejecuta supabase-setup.sql en SQL Editor.
-   Si ya tienes la base creada, ejecuta en este orden actualizar-animales-mapa.sql, mejorar-quiz-puntos.sql y niveles-quiz-escaner.sql. El último script crea el control de un quiz diario por animal, tres niveles progresivos y el registro de tickets QR canjeados.
+   Si ya tienes la base creada, ejecuta en este orden actualizar-animales-mapa.sql, mejorar-quiz-puntos.sql y niveles-quiz-escaner.sql. El último script crea el control de un quiz diario por animal, exige 1,000 puntos para el nivel intermedio y 2,000 para el avanzado, y registra tickets QR canjeados.
 3. Copia Project URL y anon/publishable key a zv-cloud-config.js. No pongas la clave secret/service_role en el navegador.
 4. Crea las cuatro cuentas en Authentication y autorízalas desde SQL Editor. Reemplaza los correos de ejemplo y ejecuta: insert into public.admins(user_id,role) select id,'admin' from auth.users where email in ('admin1@ejemplo.com','admin2@ejemplo.com','admin3@ejemplo.com','admin4@ejemplo.com') on conflict(user_id) do nothing;
 5. Publica juntos index.html, admin.html, zv-cloud-config.js, manifest.json y mapa-zoologico.png en un sitio HTTPS.

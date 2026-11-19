@@ -60,6 +60,8 @@ declare
   p public.quiz_progreso%rowtype;
   lvl smallint;
   q_count integer;
+  current_points integer := 0;
+  required_points integer := 0;
 begin
   if uid is null then raise exception 'authentication required'; end if;
   if not exists (select 1 from public.animales a where a.id=p_animal_id and a.is_active) then
@@ -79,6 +81,14 @@ begin
     return jsonb_build_object('can_play',false,'completed',false,'played_today',true,'highest_level',p.highest_level);
   end if;
   lvl := p.highest_level + 1;
+  required_points := (lvl-1)*1000;
+  select coalesce(g.points,0) into current_points from public.progreso_visitantes g where g.user_id=uid;
+  current_points := coalesce(current_points,0);
+  if current_points < required_points then
+    return jsonb_build_object('can_play',false,'completed',false,'need_points',true,
+      'level',lvl,'highest_level',p.highest_level,'required_points',required_points,
+      'current_points',current_points,'points_remaining',required_points-current_points);
+  end if;
   select count(*) into q_count from public.preguntas q
   where q.animal_id=p_animal_id and q.active
     and q.question_order between ((lvl-1)*5+1) and (lvl*5);
